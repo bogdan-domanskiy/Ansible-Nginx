@@ -1,0 +1,95 @@
+---
+- name: Check for NGINX install
+  stat:
+    path: /usr/sbin/nginx
+    follow: yes
+  register: nginx_result
+
+- name: Install NGINX
+  block:
+    - name: (CentOS 6/7) Configure NGINX repository
+      yum_repository:
+        name: nginx
+        baseurl: "{{ repository }}"
+        description: NGINX Repository
+        enabled: yes
+        gpgcheck: yes
+        mode: 0644
+      notify:
+        - Update All packages
+      when: ansible_facts['distribution_major_version'] is version('8', '<')
+
+    - name: (CentOS 8) Configure NGINX repository
+      blockinfile:
+        path: /etc/yum.repos.d/nginx.repo
+        create: yes
+        block: |
+          [nginx]
+          baseurl = {{ repository }}
+          enabled = 1
+          gpgcheck = 1
+          name = NGINX Repository
+          module_hotfixes = true
+        mode: 0644
+      notify:
+        - Update All packages
+      when: ansible_facts['distribution_major_version'] is version('8', '==')
+
+    - name: Get latest available version of nginx
+      shell: "yum list nginx | awk {'print $2'} | tail -1 | awk '{print substr($0,3,length($0)-12)}'"
+      register: nginx_available_version
+
+    - name: Set fact of nginx version
+      set_fact:
+        nginx_v:  "{{ nginx_available_version.stdout }}"
+
+    - name: (CentOS) Install NGINX
+      yum:
+        name: "nginx-{{ nginx_v }}"
+        state: "{{ nginx_state }}"
+        enablerepo: nginx
+        update_cache: yes
+      ignore_errors: "{{ ansible_check_mode }}"
+      notify:
+        - (Handler - CentOS) Start NGINX Unit
+        - (Handler) Run NGINX
+  when: nginx_result.stat.exists == false
+
+
+- name: Checking NGINX installation or latest version
+  block:
+
+    - name: Get latest available version of nginx
+      notify: (Handler) Update All packages
+      shell: "yum check-update nginx | awk {'print $2'} | tail -1 | awk '{print substr($0,3,length($0)-12)}'"
+      register: nginx_available_version
+
+
+    - name: Collect nginx -v output
+      command: nginx -v
+      register: nginx_v_out
+
+
+    - name: Make nginx -v output a single line
+      set_fact:
+        nginx_v: "{{ nginx_v_out.stderr | regex_replace('\\n', ' ') }}"
+
+    - name: Register nginx-reported facts
+      set_fact:
+        nginx_version: "{{ nginx_v | regex_replace('.*nginx version: nginx/([\\d.]+).*', '\\1') }}"
+
+  when: nginx_result.stat.exists == true
+
+
+
+
+- name: Update NGINX to the latest version
+  yum:
+    state: latest
+    enablerepo: nginx
+    update_cache: yes
+  ignore_errors: "{{ ansible_check_mode }}"
+  notify:
+    - (Handler - CentOS) Start NGINX Unit
+    - (Handler) Run NGINX
+  when: ( nginx_result.stat.exists == 'true' ) or  nginx_available_version.stdout != ""

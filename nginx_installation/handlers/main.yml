@@ -1,0 +1,41 @@
+---
+# handlers file for nginx_installation
+  - name: Update All packages
+    become: yes
+   #   apt: update_cache=yes upgrade=dist
+    command: yum -y update
+    listen: (Handler) Update All packages
+
+
+  - name: (Handler) Start/reload NGINX
+    service:
+      name: nginx
+      state: reloaded
+      enabled: yes
+    when:
+      - nginx_start | bool
+      - not ansible_check_mode | bool
+    listen: (Handler) Run NGINX
+
+  - name: (Handler) Check NGINX
+    command: nginx -t
+    register: config_check
+    ignore_errors: yes
+    check_mode: no
+    changed_when: false
+    listen: (Handler) Run NGINX
+
+  - name: (Handler) Print NGINX error if syntax check fails
+    debug:
+      var: config_check.stderr_lines
+    failed_when: config_check.rc != 0
+    when:
+      - config_check.stderr_lines is defined
+      - config_check.rc != 0
+    listen: (Handler) Run NGINX
+
+  - name: (Handler - CentOS) Start NGINX Unit
+    service:
+      name: unit
+      state: started
+      enabled: yes

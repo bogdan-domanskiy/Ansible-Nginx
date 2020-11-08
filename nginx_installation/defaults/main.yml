@@ -1,0 +1,5 @@
+---
+# defaults file for nginx_installation
+nginx_state: present
+nginx_start: true
+repository: http://nginx.org/packages/centos/$releasever/$basearch/
