@@ -6,8 +6,8 @@ nodes:
 
         ansible_host: "{{ lookup('env','DIGI_VM_IP') }}"
         ansible_user: root
-        ansible_ssh_private_key: "~/.ssh/authorized_keys"
-
+#        ansible_ssh_private_key: "~/.ssh/authorized_keys"
+        host_key_checking: false
 
 
 
