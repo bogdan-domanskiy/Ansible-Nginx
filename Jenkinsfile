@@ -1,8 +1,5 @@
 pipeline {
   agent { node { label 'master' } }
-/*  environment {
-    DIGI_TOKEN = "767cd6e019aa59861af0cef253adcb3dface98928c6bb6d8d77d92c0b5d668a5"
-  }*/
   stages {
     stage('Cloning Git') {
       steps {
@@ -16,7 +13,6 @@ pipeline {
             withCredentials([string(credentialsId: 'DigitalOcean-token', variable:  'DIGI_TOKEN')]) {
             sh ("""
               sh get_vm_ip.sh
-
             """)
             }
 
@@ -26,16 +22,25 @@ pipeline {
     stage('Check ansible syntax') {
       steps{
         script {
-        sh "/usr/local/bin/ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check -vv"
+        sh "/usr/local/bin/ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check"
         }
       }
     }
-    stage('Deploy Image') {
+    stage("Ping the hosts.") {
+        steps {
+            withCredentials([string(credentialsId: 'VMpass', variable: 'ANSIBLE_HOST_PASSWORD')]) {
+               sh("""
+                  /usr/local/bin/ansible -m ping -i ./hosts/production nginx -e ansible_password=$ANSIBLE_HOST_PASSWORD
+                """)
+            }
+        }
+    }
+    stage('Run Ansible playbook') {
       steps{
         script {
           withCredentials([string(credentialsId: 'VMpass', variable: 'ANSIBLE_HOST_PASSWORD')]) {
             sh("""
-                /usr/local/bin/ansible-playbook -i ./hosts/test ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD -vv
+                /usr/local/bin/ansible-playbook -i ./hosts/test ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD
               """)
           }
         }
