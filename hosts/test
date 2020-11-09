@@ -3,9 +3,9 @@ nodes:
     hosts:
       ansible-host.com:
 # DIGI_VM_IP is the result of next command `doctl compute droplet list | grep ansible | awk '{print $3}'`
-
-        ansible_host: "{{ lookup('env','DIGI_VM_IP') }}"
-        ansible_user: root
+        ansible_host: "159.89.24.208"
+        #ansible_host: "{{ lookup('env','DIGI_VM_IP') }}"
+#        ansible_user: root
 #        ansible_ssh_private_key: "~/.ssh/authorized_keys"
         host_key_checking: false
 

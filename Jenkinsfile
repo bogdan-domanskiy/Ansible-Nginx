@@ -1,8 +1,4 @@
 pipeline {
-  environment {
-    DIGI_TOKEN = 'DigitalOcean-token'
-    ANSIBLE_HOST_PASSWORD = 'VMpass'
-  }
   agent { node { label 'master' } }
   stages {
     stage('Cloning Git') {
@@ -11,13 +7,20 @@ pipeline {
         sh "ls -la"
       }
     }
-    stage('Get the hosts IP') {
+    /*stage('Get the hosts IP') {
       steps{
-      script {
-          sh "export DIGI_VM_IP=`sh get_vm_ip.sh`"
+        script {
+            withCredentials([string(credentialsId: 'dgtoken', variable: 'DIGI_TOKEN')]) {
+            sh ("""
+            echo $DIGI_TOKEN
+            export DIGI_VM_IP=`sh get_vm_ip.sh`
+            echo $DIGI_VM_IP
+            """)
+            }
+
+        }
       }
-      }
-    }
+    }*/
     stage('Check ansible syntax') {
       steps{
         script {
@@ -28,7 +31,11 @@ pipeline {
     stage('Deploy Image') {
       steps{
         script {
-            sh "ansible-playbook -i ./hosts/test ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD -vv"
+          withCredentials([usernamePassword(credentialsId: 'manual_pass', usernameVariable: 'USERNAME', passwordVariable: 'ANSIBLE_HOST_PASSWORD')]) {
+            sh("""
+                ansible-playbook -i ./hosts/test ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD -vv
+              """)
+          }
         }
       }
     }
