@@ -11,11 +11,18 @@ Before running you should import the next needed environment variables. Also, fo
 
   Environment variables for the Jenkins master:
   export ADMIN_PASS=`cat /var/jenkins_home/secrets/initialAdminPassword` or export ADMIN_PASS=`cat /var/lib/jenkins/secrets/initialAdminPassword`
+
   export CLIENT_ID="00000-0000-0000-000-0000"
+
   export CLIENT_SECRET="00000-0000-0000-000-0000"
+
   export SUBSCRIPTION_ID="00000-0000-0000-000-0000"
+
   export TENNANT_ID="00000-0000-0000-000-0000"
+
   export VM_PASS_VAR_HASH="00000-0000-0000-000-0000"
+
   export DIGITAL_TOKEN_VAR_HASH="00000-0000-0000-000-0000"
+
 
 Then you will prepare Jenkins master using Jenkins-automatization.sh script.
