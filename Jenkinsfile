@@ -13,19 +13,15 @@ pipeline {
     }
     stage('Get the hosts IP') {
       steps{
-        script {
-        sh("""
-                /var/lib/snapd/snap/bin/doctl auth init --access-token $DIGI_TOKEN > /dev/null 2>&1 | sleep 30
-
-                export DIGI_VM_IP=`/var/lib/snapd/snap/bin/doctl compute droplet list | grep ansible | awk '{print \$3}'`
-        """)
-        }
+      script {
+          sh "chmod +x get_vm_ip.sh | sh get_vm_ip.sh"
+      }
       }
     }
     stage('Check ansible syntax') {
       steps{
         script {
-        sh" cd Ansible-Nginx | ansible-playbook -i ./hosts ansible_playbook.yml --syntax-check -vv"
+        sh" cd Ansible-Nginx | ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check -vv"
         }
       }
     }
