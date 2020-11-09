@@ -1,5 +1,8 @@
 pipeline {
   agent { node { label 'master' } }
+/*  environment {
+    DIGI_TOKEN = "767cd6e019aa59861af0cef253adcb3dface98928c6bb6d8d77d92c0b5d668a5"
+  }*/
   stages {
     stage('Cloning Git') {
       steps {
@@ -12,8 +15,8 @@ pipeline {
         script {
             withCredentials([string(credentialsId: 'DigitalOcean-token', variable:  'DIGI_TOKEN')]) {
             sh ("""
-              /var/lib/snapd/snap/bin/doctl auth init --access-token $DIGI_TOKEN > /dev/null 2>&1
-              export DIGI_VM_IP=`/var/lib/snapd/snap/bin/doctl compute droplet list | grep ansible | sed -e 's/   //g'| cut -d " " -f 3`      
+              sh get_vm_ip.sh
+
             """)
             }
 
