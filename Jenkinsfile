@@ -14,14 +14,14 @@ pipeline {
     stage('Get the hosts IP') {
       steps{
       script {
-          sh "chmod +x get_vm_ip.sh | sh get_vm_ip.sh"
+          sh "export DIGI_VM_IP=`sh get_vm_ip.sh`"
       }
       }
     }
     stage('Check ansible syntax') {
       steps{
         script {
-        sh" cd Ansible-Nginx | ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check -vv"
+        sh "ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check -vv"
         }
       }
     }

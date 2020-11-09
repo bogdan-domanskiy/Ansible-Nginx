@@ -6,11 +6,20 @@ nodes:
 
         ansible_host: "{{ lookup('env','DIGI_VM_IP') }}"
         ansible_user: root
-#        ansible_ssh_private_key: "~/.ssh/authorized_keys"
-        host_key_checking: false
+        ansible_ssh_private_key: "~/.ssh/authorized_keys"
 
 
 
 
 
 
+
+
+
+#[nodes]
+#ansible-host ansible_host={{ lookup('env','DIGI_VM_IP') }} ansibel_user=doman ansible_ssh_private_key=~/.ssh/authorized_keys
+
+#ansible_password=130900Bdoman
+
+#[nodes:vars]
+#ansible_python_interpreter=/usr/bin/python3
