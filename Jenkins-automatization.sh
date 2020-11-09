@@ -116,50 +116,53 @@ cat <<'EOF' >job.xml
   <properties/>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.84">
     <script>pipeline {
-  environment {
-    DIGI_TOKEN = &apos;DigitalOcean-token&apos;
-    ANSIBLE_HOST_PASSWORD = &apos;VMpass&apos;
-  }
-  agent { node { label &apos;master&apos; } }
-  stages {
-    stage(&apos;Cloning Git&apos;) {
-      steps {
-        git &apos;https://github.com/bogdan-domanskiy/Ansible-Nginx.git&apos;
-        sh &quot;ls -la&quot;
-      }
-    }
-    stage(&apos;Get the hosts IP&apos;) {
-      steps{
-        script {
-        sh(&quot;&quot;&quot;
-                doctl auth init --access-token $DIGI_TOKEN &gt; /dev/null 2&gt;&amp;1
+      agent { node { label 'master' } }
+      stages {
+        stage('Cloning Git') {
+          steps {
+            git 'https://github.com/bogdan-domanskiy/Ansible-Nginx.git'
+            sh "ls -la"
+          }
+        }
+        /*stage('Get the hosts IP') {
+          steps{
+            script {
+                withCredentials([string(credentialsId: 'dgtoken', variable: 'DIGI_TOKEN')]) {
+                sh ("""
+                echo $DIGI_TOKEN
+                export DIGI_VM_IP=`sh get_vm_ip.sh`
+                echo $DIGI_VM_IP
+                """)
+                }
 
-                export DIGI_VM_IP=`doctl compute droplet list | grep ansible | awk &apos;{print \$3}&apos;`
-        &quot;&quot;&quot;)
+            }
+          }
+        }*/
+        stage('Check ansible syntax') {
+          steps{
+            script {
+            sh "ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check -vv"
+            }
+          }
+        }
+        stage('Deploy Image') {
+          steps{
+            script {
+              withCredentials([usernamePassword(credentialsId: 'manual_pass', usernameVariable: 'USERNAME', passwordVariable: 'ANSIBLE_HOST_PASSWORD')]) {
+                sh("""
+                    ansible-playbook -i ./hosts/test ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD -vv
+                  """)
+              }
+            }
+          }
+        }
+        stage('Remove cloned dir.') {
+          steps{
+            sh "rm -fr ../Ansible-Nginx"
+          }
         }
       }
     }
-    stage(&apos;Check ansible syntax&apos;) {
-      steps{
-        script {
-        sh&quot; cd Ansible-Nginx | ansible-playbook -i ./hosts ansible_playbook.yml --syntax-check -vv&quot;
-        }
-      }
-    }
-    stage(&apos;Deploy Image&apos;) {
-      steps{
-        script {
-            sh &quot;ansible-playbook -i ./hosts ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD -vv&quot;
-        }
-      }
-    }
-    stage(&apos;Remove Unused docker image&apos;) {
-      steps{
-        sh &quot;rm -fr ../Ansible-Nginx&quot;
-      }
-    }
-  }
-}
 </script>
     <sandbox>true</sandbox>
   </definition>

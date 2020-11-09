@@ -2,13 +2,15 @@
 nodes:
     hosts:
       ansible-host.com:
-# DIGI_VM_IP is the result of next command `doctl compute droplet list | grep ansible | awk '{print $3}'`
-        ansible_host: "159.89.24.208"
-        #ansible_host: "{{ lookup('env','DIGI_VM_IP') }}"
+# DIGI_VM_IP is the result of next command `/var/lib/snapd/snap/bin/doctl compute droplet list | grep ansible | sed -e 's/   //g'| cut -d " " -f 3`
+        #ansible_host: "46.101.176.145"
+        ansible_host: "{{ lookup('env','DIGI_VM_IP') }}"
         ansible_user: root
 #        ansible_ssh_private_key: "~/.ssh/authorized_keys"
-        host_key_checking: false
 
+default:
+    host_key_checking: false
+      ansible_python_interpreter: /usr/bin/python3
 
 
 
@@ -19,7 +21,6 @@ nodes:
 #[nodes]
 #ansible-host ansible_host={{ lookup('env','DIGI_VM_IP') }} ansibel_user=doman ansible_ssh_private_key=~/.ssh/authorized_keys
 
-#ansible_password=130900Bdoman
 
 #[nodes:vars]
 #ansible_python_interpreter=/usr/bin/python3

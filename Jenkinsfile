@@ -7,33 +7,32 @@ pipeline {
         sh "ls -la"
       }
     }
-    /*stage('Get the hosts IP') {
+    stage('Get the hosts IP') {
       steps{
         script {
-            withCredentials([string(credentialsId: 'dgtoken', variable: 'DIGI_TOKEN')]) {
+            withCredentials([string(credentialsId: 'DigitalOcean-token', variable:  'DIGI_TOKEN')]) {
             sh ("""
-            echo $DIGI_TOKEN
-            export DIGI_VM_IP=`sh get_vm_ip.sh`
-            echo $DIGI_VM_IP
+              /var/lib/snapd/snap/bin/doctl auth init --access-token $DIGI_TOKEN > /dev/null 2>&1
+              export DIGI_VM_IP=`/var/lib/snapd/snap/bin/doctl compute droplet list | grep ansible | sed -e 's/   //g'| cut -d " " -f 3`      
             """)
             }
 
         }
       }
-    }*/
+    }
     stage('Check ansible syntax') {
       steps{
         script {
-        sh "ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check -vv"
+        sh "/usr/local/bin/ansible-playbook -i ./hosts/test ansible_playbook.yml --syntax-check -vv"
         }
       }
     }
     stage('Deploy Image') {
       steps{
         script {
-          withCredentials([usernamePassword(credentialsId: 'manual_pass', usernameVariable: 'USERNAME', passwordVariable: 'ANSIBLE_HOST_PASSWORD')]) {
+          withCredentials([string(credentialsId: 'VMpass', variable: 'ANSIBLE_HOST_PASSWORD')]) {
             sh("""
-                ansible-playbook -i ./hosts/test ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD -vv
+                /usr/local/bin/ansible-playbook -i ./hosts/test ansible_playbook.yml -e ansible_password=$ANSIBLE_HOST_PASSWORD -vv
               """)
           }
         }
